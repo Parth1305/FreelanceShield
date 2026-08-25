@@ -13,6 +13,12 @@
 
 # testing
 /coverage
+/coverage.json
+/contracts/artifacts/
+/contracts/cache/
+/contracts/coverage/
+/contracts/coverage.json
+/ignition/deployments/
 
 # next.js
 /.next/
