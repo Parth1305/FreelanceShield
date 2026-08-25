@@ -43,7 +43,7 @@ function bytes32(value: string | undefined, field: string): Hex | undefined {
   if (!isHex(value, { strict: true }) || size(value) !== 32) {
     throw new ApiError(400, `${field} must be a 32-byte hex value`, "invalid_hash");
   }
-  return value;
+  return value.toLowerCase() as Hex;
 }
 
 function transactionHash(value: string): Hex {

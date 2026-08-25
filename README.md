@@ -1,21 +1,22 @@
 # FreelanceShield
 
-FreelanceShield is a blockchain escrow system for milestone-based freelance work. The smart-contract layer is implemented and tested. The current web dashboard is an interactive portfolio demo; the authenticated D1 backend and live viem integration are the next phase and are **not** claimed as complete here.
+FreelanceShield is a blockchain escrow system for milestone-based freelance work. The smart-contract layer and authenticated backend are implemented and tested. The current web dashboard is still an interactive portfolio demo; MetaMask transaction wiring and the freelancer-facing UI remain the next phase.
 
 ## Current status
 
 - Implemented: ERC-1167 escrow factory, milestone escrow, designated-arbiter disputes, on-chain reputation, Hardhat tests, coverage, Sepolia Ignition module, address exporter.
+- Backend: D1/Drizzle users, projects, milestones and mirrored escrow state; email/password JWT auth; role authorization; viem factory deployment, transaction preparation/validation, and DB/on-chain reconciliation.
 - Existing demo: responsive client dashboard with contract creation, milestone approval, wallet-state, dispute, activity, and reputation interactions.
-- Not implemented yet: D1/Drizzle persistence, JWT accounts, backend viem transaction routes, MetaMask transaction wiring, freelancer dashboard, n8n workflow.
+- Not implemented yet: MetaMask transaction wiring in the UI, freelancer dashboard, n8n workflow.
 - Sepolia: deployment configuration is ready, but no deployment or Etherscan verification is claimed until funded credentials are provided.
 
 ## Architecture
 
 ```text
-Browser / MetaMask (next phase)
+Browser / MetaMask (UI wiring next phase)
           |
           v
-vinext Route Handlers -- JWT -- D1 / Drizzle (next phase)
+vinext Route Handlers -- JWT -- D1 / Drizzle
           |
         viem
           |
@@ -32,6 +33,24 @@ ReputationRegistry <------ one final result per Escrow clone
 ```
 
 The dispute model uses one designated arbiter chosen for the project. That is intentionally simpler than token voting: freelance evidence may be private, and an unrelated voter set introduces governance capture and participation problems without improving this demo's trust assumptions.
+
+## Backend API
+
+Accounts use email/password authentication with bcrypt password hashing and seven-day HS256 JWT access tokens. Wallet addresses are associated with accounts at registration. The API never stores party private keys: client and freelancer contract actions are simulated and encoded with viem, returned for wallet signature, then accepted a second time with the mined transaction hash. The confirmation step validates signer, target contract, function, milestone and deliverable hash before updating D1.
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/auth/register` | Create an account and issue a JWT |
+| `POST` | `/api/auth/login` | Verify credentials and issue a JWT |
+| `GET` | `/api/auth/me` | Return the current account |
+| `GET`, `POST` | `/api/projects` | List participant projects or create a project and escrow |
+| `GET` | `/api/projects/:projectId` | Reconcile and return DB plus live escrow state |
+| `POST` | `/api/projects/:projectId/milestones/:milestoneId/submit` | Prepare/confirm freelancer submission |
+| `POST` | `/api/projects/:projectId/milestones/:milestoneId/approve` | Prepare/confirm client approval |
+| `POST` | `/api/projects/:projectId/milestones/:milestoneId/reject` | Prepare/confirm client rejection |
+| `POST` | `/api/projects/:projectId/milestones/:milestoneId/dispute` | Prepare/confirm participant dispute |
+
+Escrow creation is the only relayed write and requires `CHAIN_RELAYER_PRIVATE_KEY`. That key cannot submit, approve, reject, dispute, fund, or withdraw for project participants because the contracts authorize their own wallet addresses.
 
 ## Contracts
 
@@ -61,6 +80,8 @@ Requirements: Node.js 22.13 or newer.
 
 ```bash
 npm install
+npm run db:generate
+npm run backend:test
 npm run contracts:compile
 npm run contracts:test
 npm run contracts:coverage
@@ -94,10 +115,12 @@ npm run contracts:export-addresses
 
 The deployment command runs the Ignition module against Sepolia with verification enabled. The module deploys the implementation, resolver, registry, and factory, then authorizes the factory in both registries.
 
+For the backend, copy `.env.example` and set `JWT_SECRET`, `SEPOLIA_RPC_URL`, `CHAIN_RELAYER_PRIVATE_KEY`, and the verified `ESCROW_FACTORY_ADDRESS`. The generated migration in `drizzle/` creates the D1 schema. Sites applies checked-in migrations to the configured `DB` binding during deployment.
+
 ## Web build
 
 ```bash
 npm run build
 ```
 
-The project uses the vinext/Cloudflare Workers structure. D1 bindings are configured through the Cloudflare deployment environment; the application schema and API routes will be added in the backend phase.
+The project uses the vinext/Cloudflare Workers structure. The `DB` D1 binding is configured through the Cloudflare deployment environment. Backend unit tests use an in-memory repository and mocked chain boundary; live Sepolia integration remains configuration-dependent until the contracts are deployed.

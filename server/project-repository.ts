@@ -54,26 +54,28 @@ export class DrizzleProjectRepository implements ProjectRepository {
 
   async createProject(input: NewProjectInput): Promise<ProjectBundle> {
     const createdAt = now();
-    await this.db.insert(projects).values({
-      id: input.id,
-      clientId: input.clientId,
-      freelancerId: input.freelancerId,
-      title: input.title,
-      description: input.description,
-      arbiterAddress: input.arbiterAddress,
-      feeAmountWei: input.feeAmountWei,
-      status: "deploying",
-      createdAt,
-      updatedAt: createdAt,
-    });
-    await this.db.insert(milestones).values(
-      input.milestones.map((milestone) => ({
-        ...milestone,
-        projectId: input.id,
+    await this.db.batch([
+      this.db.insert(projects).values({
+        id: input.id,
+        clientId: input.clientId,
+        freelancerId: input.freelancerId,
+        title: input.title,
+        description: input.description,
+        arbiterAddress: input.arbiterAddress,
+        feeAmountWei: input.feeAmountWei,
+        status: "deploying",
         createdAt,
         updatedAt: createdAt,
-      })),
-    );
+      }),
+      this.db.insert(milestones).values(
+        input.milestones.map((milestone) => ({
+          ...milestone,
+          projectId: input.id,
+          createdAt,
+          updatedAt: createdAt,
+        })),
+      ),
+    ]);
     const bundle = await this.getProjectBundle(input.id);
     if (!bundle) throw new Error("The newly created project could not be read");
     return bundle;
