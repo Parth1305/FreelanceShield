@@ -23,7 +23,7 @@ function executionContext() {
   };
 }
 
-test("server-renders the FreelanceShield dashboard", async () => {
+test("server-renders the FreelanceShield account entry point", async () => {
   const worker = await loadWorker();
   const response = await worker.fetch(
     new Request("http://localhost/", { headers: { accept: "text/html" } }),
@@ -34,9 +34,10 @@ test("server-renders the FreelanceShield dashboard", async () => {
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
   assert.match(html, /FreelanceShield/);
-  assert.match(html, /Connect wallet/);
-  assert.match(html, /DeFi Analytics Dashboard/);
-  assert.match(html, /Protected on Ethereum/);
+  assert.match(html, /Work delivered/);
+  assert.match(html, /Payments protected/);
+  assert.match(html, /MetaMask signs them/);
+  assert.match(html, /Sign in securely/);
   assert.doesNotMatch(html, /Your site is taking shape|Building your site/);
 });
 

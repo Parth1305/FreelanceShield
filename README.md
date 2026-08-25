@@ -1,19 +1,19 @@
 # FreelanceShield
 
-FreelanceShield is a blockchain escrow system for milestone-based freelance work. The smart-contract layer and authenticated backend are implemented and tested. The current web dashboard is still an interactive portfolio demo; MetaMask transaction wiring and the freelancer-facing UI remain the next phase.
+FreelanceShield is a blockchain escrow system for milestone-based freelance work. The contracts, authenticated backend, and client/freelancer web workspace are implemented and tested. Live transactions remain configuration-dependent until the contracts are deployed to Sepolia.
 
 ## Current status
 
 - Implemented: ERC-1167 escrow factory, milestone escrow, designated-arbiter disputes, on-chain reputation, Hardhat tests, coverage, Sepolia Ignition module, address exporter.
 - Backend: D1/Drizzle users, projects, milestones and mirrored escrow state; email/password JWT auth; role authorization; viem factory deployment, transaction preparation/validation, and DB/on-chain reconciliation.
-- Existing demo: responsive client dashboard with contract creation, milestone approval, wallet-state, dispute, activity, and reputation interactions.
-- Not implemented yet: MetaMask transaction wiring in the UI, freelancer dashboard, n8n workflow.
+- Frontend: responsive account access, MetaMask/Sepolia connection, client and freelancer workspaces, project creation, escrow funding, milestone submission/approval/rejection, disputes, reconciled escrow status, and registry-backed reputation.
+- Not implemented yet: optional n8n reminder/escalation automation. Arbiter evidence exchange and resolution UI are intentionally outside the current portfolio scope.
 - Sepolia: deployment configuration is ready, but no deployment or Etherscan verification is claimed until funded credentials are provided.
 
 ## Architecture
 
 ```text
-Browser / MetaMask (UI wiring next phase)
+Browser / MetaMask
           |
           v
 vinext Route Handlers -- JWT -- D1 / Drizzle
@@ -52,6 +52,20 @@ Accounts use email/password authentication with bcrypt password hashing and seve
 
 Escrow creation is the only relayed write and requires `CHAIN_RELAYER_PRIVATE_KEY`. That key cannot submit, approve, reject, dispute, fund, or withdraw for project participants because the contracts authorize their own wallet addresses.
 
+## Web workspace
+
+The public entry screen supports account registration and login. Registration associates the connected MetaMask address with the account. JWTs are stored locally for API authentication; wallet keys and signatures remain inside MetaMask.
+
+Clients can create milestone projects, fund deployed escrows, approve or reject submissions, and raise disputes. Freelancers can switch to their assigned-project workspace, submit a deliverable URL whose hash is committed on-chain, and raise disputes. Accounts with the `both` role can switch workspaces without signing in again.
+
+Each write follows the same two-step flow:
+
+1. The API validates the participant and simulates/encodes the contract call with viem.
+2. MetaMask signs and broadcasts the prepared Sepolia transaction.
+3. The API verifies the mined signer, escrow, function, milestone and deliverable hash, then reconciles D1 from live contract state.
+
+Funding is sent directly from the client wallet to the escrow. Reputation reads use the generated Sepolia registry address when one is available; before deployment the UI accurately reports that the registry is pending.
+
 ## Contracts
 
 - `EscrowFactory.sol`: deploys and atomically initializes one non-upgradeable ERC-1167 clone per project, then authorizes it with the resolver and registry.
@@ -82,6 +96,7 @@ Requirements: Node.js 22.13 or newer.
 npm install
 npm run db:generate
 npm run backend:test
+npm run frontend:test
 npm run contracts:compile
 npm run contracts:test
 npm run contracts:coverage
@@ -120,7 +135,10 @@ For the backend, copy `.env.example` and set `JWT_SECRET`, `SEPOLIA_RPC_URL`, `C
 ## Web build
 
 ```bash
+npm run typecheck
+npm run lint
+npm test
 npm run build
 ```
 
-The project uses the vinext/Cloudflare Workers structure. The `DB` D1 binding is configured through the Cloudflare deployment environment. Backend unit tests use an in-memory repository and mocked chain boundary; live Sepolia integration remains configuration-dependent until the contracts are deployed.
+The project uses the vinext/Cloudflare Workers structure. The `DB` D1 binding is configured through the Cloudflare deployment environment. The current automated suite contains 8 backend unit tests, 3 frontend API/wallet helper tests, and 2 production-render/build-manifest smoke tests. Live Sepolia integration remains configuration-dependent until the contracts are deployed and runtime secrets are supplied.

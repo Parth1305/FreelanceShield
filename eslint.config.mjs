@@ -13,6 +13,12 @@ const eslintConfig = defineConfig([
     "dist/**",
     "out/**",
     "build/**",
+    ".vinext/**",
+    "coverage/**",
+    "contracts/artifacts/**",
+    "contracts/cache/**",
+    "contracts/coverage/**",
+    "ignition/deployments/**",
     "next-env.d.ts",
   ]),
   eslint.configs.recommended,
@@ -34,6 +40,18 @@ const eslintConfig = defineConfig([
       react: {
         version: "detect",
       },
+    },
+  },
+  {
+    files: ["**/*.cjs"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.mocha,
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
     },
   },
 ]);
