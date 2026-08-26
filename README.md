@@ -2,6 +2,8 @@
 
 FreelanceShield is a blockchain escrow system for milestone-based freelance work. The contracts, authenticated backend, and client/freelancer web workspace are implemented and tested. Live transactions remain configuration-dependent until the contracts are deployed to Sepolia.
 
+Maintained by [Parth Gohil](https://github.com/Parth1305).
+
 ## Current status
 
 - Implemented: ERC-1167 escrow factory, milestone escrow, designated-arbiter disputes, on-chain reputation, Hardhat tests, coverage, Sepolia Ignition module, address exporter.
