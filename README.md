@@ -1,6 +1,6 @@
 # FreelanceShield
 
-FreelanceShield is a blockchain escrow system for milestone-based freelance work. The contracts, authenticated backend, and client/freelancer web workspace are implemented and tested. Live transactions remain configuration-dependent until the contracts are deployed to Sepolia.
+FreelanceShield is a blockchain escrow system for milestone-based freelance work. The contracts, authenticated backend, and client/freelancer web workspace are implemented and tested. The core contracts are deployed on Sepolia; live application transactions require runtime RPC, relayer, JWT, and D1 configuration.
 
 Maintained by [Parth Gohil](https://github.com/Parth1305).
 
@@ -10,7 +10,7 @@ Maintained by [Parth Gohil](https://github.com/Parth1305).
 - Backend: D1/Drizzle users, projects, milestones and mirrored escrow state; email/password JWT auth; role authorization; viem factory deployment, transaction preparation/validation, and DB/on-chain reconciliation.
 - Frontend: responsive account access, MetaMask/Sepolia connection, client and freelancer workspaces, project creation, escrow funding, milestone submission/approval/rejection, disputes, reconciled escrow status, and registry-backed reputation.
 - Not implemented yet: optional n8n reminder/escalation automation. Arbiter evidence exchange and resolution UI are intentionally outside the current portfolio scope.
-- Sepolia: deployment configuration is ready, but no deployment or Etherscan verification is claimed until funded credentials are provided.
+- Sepolia: all four contracts are deployed, the factory is authorized in the resolver and reputation registry, and the generated application configuration contains the live addresses. Etherscan source verification remains pending an API key.
 
 ## Architecture
 
@@ -79,16 +79,20 @@ Value transfers use pull payments. Approval or resolution updates accounting wit
 
 ## Sepolia addresses
 
-No Sepolia deployment has been made from this repository yet.
+Deployed from this repository on Sepolia (chain ID `11155111`). On-chain bytecode and factory wiring were checked after deployment.
 
 | Contract | Address |
 | --- | --- |
-| Escrow implementation | Pending deployment |
-| EscrowFactory | Pending deployment |
-| DisputeResolver | Pending deployment |
-| ReputationRegistry | Pending deployment |
+| Escrow implementation | [`0xDDb2824E9f968Bb89085c26d71703f22ef7db69C`](https://sepolia.etherscan.io/address/0xDDb2824E9f968Bb89085c26d71703f22ef7db69C) |
+| EscrowFactory | [`0xaA3923a7deFaf0D925E22ECC3208d5f3B405A8f0`](https://sepolia.etherscan.io/address/0xaA3923a7deFaf0D925E22ECC3208d5f3B405A8f0) |
+| DisputeResolver | [`0x822578A8825f4b78BC2E9AA99F0E3672df17B7dA`](https://sepolia.etherscan.io/address/0x822578A8825f4b78BC2E9AA99F0E3672df17B7dA) |
+| ReputationRegistry | [`0xabCd60022f4567520C3145b540999A9601655CfD`](https://sepolia.etherscan.io/address/0xabCd60022f4567520C3145b540999A9601655CfD) |
 
-After deployment, `npm run contracts:export-addresses` generates `app/lib/contracts.generated.ts` from Hardhat Ignition's canonical deployment record.
+`npm run contracts:export-addresses` generated `app/lib/contracts.generated.ts` from Hardhat Ignition's canonical deployment record. The backend uses the generated factory address by default while still allowing an `ESCROW_FACTORY_ADDRESS` runtime override.
+
+### Live Sepolia smoke test
+
+After deployment, a complete one-milestone lifecycle was executed against an ERC-1167 clone at [`0x1Cc98DD1e6d95Adf64fc82Fd67aA2AE7658E6612`](https://sepolia.etherscan.io/address/0x1Cc98DD1e6d95Adf64fc82Fd67aA2AE7658E6612): create, fund, submit, approve, withdraw, and reputation reporting. The escrow finished with zero remaining milestones, and both participant addresses recorded one completed contract. This test used one wei of escrow value and Sepolia test ETH for gas.
 
 ## Setup
 

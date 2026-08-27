@@ -12,6 +12,7 @@ import {
 import type { Address, Hex, PublicClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { sepolia } from "viem/chains";
+import { freelanceShieldContracts } from "@/app/lib/contracts.generated";
 import { ApiError } from "./http";
 import type {
   EscrowSnapshot,
@@ -98,7 +99,8 @@ function transactionArgs(action: MilestoneAction, position: number, deliverableH
 export function createViemChainGateway(config?: Partial<GatewayConfig>): ChainGateway {
   const runtime = getRuntimeEnv();
   const rpcUrl = config?.rpcUrl ?? runtime.SEPOLIA_RPC_URL;
-  const rawFactoryAddress = config?.factoryAddress ?? runtime.ESCROW_FACTORY_ADDRESS;
+  const rawFactoryAddress =
+    config?.factoryAddress ?? runtime.ESCROW_FACTORY_ADDRESS ?? freelanceShieldContracts.escrowFactory;
   const relayerPrivateKey = config?.relayerPrivateKey ?? runtime.CHAIN_RELAYER_PRIVATE_KEY;
   if (!rpcUrl) throw new ApiError(503, "SEPOLIA_RPC_URL is not configured", "chain_not_configured");
   if (!rawFactoryAddress || !isAddress(rawFactoryAddress)) {
